@@ -1,2 +1,3 @@
 *.scriptable
 .idea
+http-client.private.env.json
