@@ -5,7 +5,6 @@ String.prototype.insert = function (index, string) {
   if (index > 0) {
     return this.substring(0, index) + string + this.substr(index);
   }
-
   return string + this;
 };
 
@@ -135,7 +134,7 @@ function valueStyle(element) {
 async function Widgets() {
   let api = await sberFoodWallet(0)
   let widget = new ListWidget()
-  widget.backgroundColor = new Color("ffb61d")
+  widget.backgroundColor = new Color("ffcc00")
   widget = await createWidget(widget, api)
   try {
     if (config.widgetFamily === "large") {
@@ -149,9 +148,12 @@ async function Widgets() {
   return widget
 }
 
-async function createWidget(widget, api) {
+async function createWidget(rootWidget, api) {
   let appIcon = await loadAppIcon(api.logo)
   let title = api.name
+  const widget = rootWidget.addStack()
+  widget.url = "https://app.sberfood.ru/places/" + api["id"]  
+  widget.layoutVertically()
 
   let startSymbol = SFSymbol.named("star.circle.fill")
 
@@ -180,14 +182,14 @@ async function createWidget(widget, api) {
   // Show Bonuses
   let bonusesStack = widget.addStack()
 
-  bonusesStack.setPadding(0, 0, 15, 0)
+  bonusesStack.setPadding(0, 0, 10, 0)
 
   let bonusesTextElement = bonusesStack.addText("Бонусы:")
   labelStyle(bonusesTextElement)
   let bonuses = widget.addStack()
 
   let starElement = bonuses.addImage(startSymbol.image)
-  starElement.imageSize = new Size(20, 20)
+  starElement.imageSize = new Size(21, 21)
   starElement.tintColor = Color.white()
 
   let bonusesElement = bonuses.addText(api.balance.toString())
@@ -195,8 +197,9 @@ async function createWidget(widget, api) {
 
   // Show Rank and Cashback
   if (config.widgetFamily !== "small") {
-
+    
     let rankCashLabel = widget.addStack()
+    rankCashLabel.setPadding(10, 0, 0, 0)
 
     let rankTextElement = rankCashLabel.addText("Уровень:")
     labelStyle(rankTextElement)
@@ -214,7 +217,7 @@ async function createWidget(widget, api) {
     let cashbackValue = rankCashValue.addText(api.bonus.toString() + "%")
     valueStyle(cashbackValue)
   }
-  return widget
+  return rootWidget
 }
 
 async function loginWidget() {
@@ -231,10 +234,11 @@ async function sberFoodWallet(index) {
   let wallet = data[index]["wallet"];
   return {
     name: data[index]["network"]["name"],
-    balance: wallet["balance"] / 100,
+    balance: wallet["balance"] / data[index]["nearbyOrganization"]["currency"]["centsCount"],
     status: wallet["currentRankName"],
     logo: wallet["logoImageUrl"],
-    bonus: wallet["bonusPercentage"]
+    bonus: wallet["bonusPercentage"],
+    id: data[index]["nearbyOrganization"]["id"]
   }
 }
 
@@ -308,24 +312,33 @@ async function inputCode() {
   let index = await a.present()
   if (index !== -1) {
     let code = a.textFieldValue(0).replace("#", "").insert(4, "#")
+    const oldData = await loadWallet();
+    console.log(oldData)
+
     let data = await activateCode(code)
     if (data.httpStatusCode && data.httpStatusCode === 500) {
       await errorAlert(data["message"])
       return
     }
-    let statusNotifacion = new Notification();
-    statusNotifacion.title = "Кешбек!"
-    statusNotifacion.sound = "default"
+    let statusNotification = new Notification();
+    statusNotification.title = "Кешбек!"
+    statusNotification.sound = "default"
+    let beforeBonuses = 0;
+    let centCount = 0;
 
-    let organization = data["organization"]
+    let organization = data["organization"];
+    for (let wallet of oldData) {
+      if (wallet['network']['id'] === organization['id']) {
+        centCount = +wallet["nearbyOrganization"]["currency"]["centsCount"];
+        beforeBonuses = wallet['wallet']['balance'] / centCount
+      }
+    }
     let wallet = organization["wallet"]
     let order = data["order"]
-    let sum = order["orderFullSum"] / order["currency"]["centsCount"]
-    let beforeBonuses = wallet["balance"] - sum / wallet["bonusPercentage"]
-    statusNotifacion.body = `Покупка в " ${organization["organization"]["name"]}" на ${sum} ${order["currency"]["shortName"]}`
-    statusNotifacion.subtitle = `${beforeBonuses} -> ${wallet["balance"]}`
-    statusNotifacion.threadIdentifier = organization["id"]
+    let sum = +order["orderFullSum"] / centCount
+    statusNotification.body = `Покупка в " ${organization["organization"]["name"]}" на ${sum} ${order["currency"]["shortName"]}`
+    statusNotification.subtitle = `${beforeBonuses} -> ${wallet["balance"]}`
 
-    await statusNotifacion.schedule()
+    await statusNotification.schedule()
   }
 }
