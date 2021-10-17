@@ -1,0 +1,31 @@
+{
+  "name": "sberfood-widget",
+  "version": "1.0.0",
+  "author": {
+    "email": "me@jagk.ru",
+    "name": "Jag_k",
+    "url": "https://jagk.ru"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jag-k/SberFood.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jag-k/SberFood/issues"
+  },
+  "main": "SberFood.js",
+  "homepage": "https://github.com/jag-k/SberFood",
+  "license": "SEE LICENSE IN LICENSE",
+  "eslintConfig": {
+    "extends": "@scriptable-ios"
+  },
+  "devDependencies": {
+    "@types/scriptable-ios": "latest",
+    "gulp": "^4.0.2",
+    "gulp-modify-file": "^1.0.1",
+    "gulp-rename": "^2.0.0"
+  },
+  "scripts": {
+    "watch": "gulp watch"
+  }
+}

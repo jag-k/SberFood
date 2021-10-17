@@ -1,0 +1,9 @@
+{
+  "always_run_in_app": false,
+  "icon": {
+    "color": "yellow",
+    "glyph": "utensils"
+  },
+  "name": "SberFood",
+  "share_sheet_inputs": []
+}

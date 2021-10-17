@@ -1,6 +1,3 @@
-// Variables used by Scriptable.
-// These must be at the very top of the file. Do not edit.
-// icon-color: yellow; icon-glyph: utensils;
 String.prototype.insert = function (index, string) {
   if (index > 0) {
     return this.substring(0, index) + string + this.substr(index);
@@ -9,35 +6,90 @@ String.prototype.insert = function (index, string) {
 };
 
 
+function labelStyle(element) {
+  element.textColor = Color.black()
+  element.textOpacity = 0.7
+  element.font = Font.mediumSystemFont(13)
+  return element
+}
+
+function valueStyle(element) {
+  element.textColor = Color.white()
+  element.font = Font.boldSystemFont(18)
+  return element
+}
+
+function addLabel(element, text, center = false, vertical = false) {
+  return labelStyle(center ? centerText(element, text, vertical) : element.addText(text))
+}
+
+function addValue(element, text, center = false, vertical = false) {
+  return valueStyle(center ? centerText(element, text, vertical) : element.addText(text))
+}
+
+function setPadding(element, ...paddings) {
+  let [top, leading, bottom, trailing] = paddings
+  if (paddings.length === 1) {
+    element.setPadding(top, top, top, top)
+  } else if (paddings.length === 2) {
+    element.setPadding(top, leading, top, leading)
+  } else if (paddings.length === 3) {
+    element.setPadding(top, leading, bottom, leading)
+  } else if (paddings.length === 4) {
+    element.setPadding(top, leading, bottom, trailing)
+  }
+  return element
+}
+
+function centerText(element, text, vertical = false) {
+  const stack = element.addStack()
+  stack.addSpacer()
+  const textElement = stack.addText(text)
+  stack.addSpacer()
+  if (vertical) stack.layoutVertically()
+  return textElement
+}
+
+function centerStack(element, vertical = false) {
+  const stack = element.addStack()
+  if (vertical) stack.layoutVertically()
+  stack.addSpacer()
+  const output = stack.addStack()
+  stack.addSpacer()
+  return output
+}
+
+
 const TOKEN = "SBERFOOD_WIDGET_TOKEN"
 const USER_ID = "SBERFOOD_WIDGET_USER_ID"
-let logined = true
+const BackgroundColor = new Color('ffcc00', 1)
+const singleOrganization = args.widgetParameter !== null;
+
+const SMALL = config.widgetFamily === "small"
+const MEDIUM = config.widgetFamily === "medium"
+const LARGE = config.widgetFamily === "large"
+
+let loggedIn = true
 
 await login()
 
-const widget = await (logined ? Widgets() : loginWidget())
+const widget = await (loggedIn ? Widgets() : loginWidget())
 
 if (config.runsInWidget) {
   Script.setWidget(widget)
-} else if (logined) {
-  await inputCode()
-}
-
-if (args.widgetParameter !== null) {
-  let a = new Notification()
-  a.title = args.widgetParameter
-  await a.schedule()
+} else if (loggedIn) {
+  await startMenu()
 }
 
 Script.complete()
 
-function errorAlert(message) {
+async function errorAlert(message) {
   const alert = new Alert()
   alert.text = "Произошла ошибка!"
   alert.message = message ? message : "Попробуйте позже"
   alert.addCancelAction("Закрыть")
-  alert.present()
-  logined = false
+  await alert.present()
+  loggedIn = false
 }
 
 async function getSMS(tel) {
@@ -78,8 +130,7 @@ async function checkSMS(tel, code) {
   })
   let res = await req.loadJSON()
   if (res && req.statusCode === 500) {
-    await errorAlert(JSON.stringify(res)["message"])
-    return
+    return await errorAlert(JSON.stringify(res)["message"])
   }
   console.log(res)
   console.log(req.response)
@@ -118,29 +169,31 @@ async function login() {
   }
 }
 
-
-function labelStyle(element) {
-  element.textColor = Color.black()
-  element.textOpacity = 0.7
-  element.font = Font.mediumSystemFont(13)
-}
-
-function valueStyle(element) {
-  element.textColor = Color.white()
-  element.font = Font.boldSystemFont(18)
-}
-
-
 async function Widgets() {
-  let api = await sberFoodWallet(0)
+  const index = singleOrganization ? args.widgetParameter : 0
+
+  let api = await sberFoodWallet(index)
   let widget = new ListWidget()
-  widget.backgroundColor = new Color("ffcc00")
-  widget = await createWidget(widget, api)
+  widget.backgroundColor = BackgroundColor
+  if (SMALL && !singleOrganization) {
+    return await codeWidget(widget);
+  }
+  let stack = widget.addStack()
+  setPadding(stack, 0)
+  stack.layoutVertically()
+  stack = await createWidget(stack, api)
+
+  if (SMALL) return widget
+
   try {
-    if (config.widgetFamily === "large") {
-      let text = widget.addText("\n")
-      valueStyle(text)
-      widget = await createWidget(widget, await sberFoodWallet(1))
+    if (singleOrganization) {
+      stack = await codeWidget(stack);
+      if (MEDIUM) stack.layoutHorizontally()
+    } else {
+      if (LARGE) {
+        addValue(stack, "\n")
+        await createWidget(stack, await sberFoodWallet(1))
+      }
     }
   } catch (err) {
     console.error(err)
@@ -152,26 +205,31 @@ async function createWidget(rootWidget, api) {
   let appIcon = await loadAppIcon(api.logo)
   let title = api.name
   const widget = rootWidget.addStack()
-  widget.url = "https://app.sberfood.ru/places/" + api["id"]  
+  if (!SMALL) widget.backgroundColor = new Color("000000", 0.1)
+
+  widget.cornerRadius = 15
+  setPadding(widget, 10)
+
+  widget.url = "https://app.sberfood.ru/places/" + api["id"]
   widget.layoutVertically()
 
-  let startSymbol = SFSymbol.named("star.circle.fill")
+  let starSymbol = SFSymbol.named("star.circle")
+  starSymbol.applyMediumWeight()
+  starSymbol = starSymbol.image
 
   // Show title and logo
   let titleStack = widget.addStack()
 
-  if (config.widgetFamily === "small") {
+  if (SMALL || (singleOrganization && !LARGE)) {
     let logoElement = titleStack.addImage(appIcon)
     logoElement.cornerRadius = 7
     logoElement.imageSize = new Size(15, 15)
     titleStack.addSpacer(8)
-    let titleElement = titleStack.addText(title)
-    labelStyle(titleElement)
+    addLabel(titleStack, title)
     titleStack.setPadding(0, 0, 15, 0)
 
   } else {
-    let titleElement = titleStack.addText(title)
-    labelStyle(titleElement)
+    addLabel(titleStack, title)
     titleStack.addSpacer()
 
     let logoElement = titleStack.addImage(appIcon)
@@ -182,63 +240,85 @@ async function createWidget(rootWidget, api) {
   // Show Bonuses
   let bonusesStack = widget.addStack()
 
-  bonusesStack.setPadding(0, 0, 10, 0)
+  setPadding(bonusesStack, 0, 0, 10)
 
-  let bonusesTextElement = bonusesStack.addText("Бонусы:")
-  labelStyle(bonusesTextElement)
+  addLabel(bonusesStack, "Бонусы:")
   let bonuses = widget.addStack()
 
-  let starElement = bonuses.addImage(startSymbol.image)
+  let starElement = bonuses.addImage(starSymbol)
   starElement.imageSize = new Size(21, 21)
   starElement.tintColor = Color.white()
 
-  let bonusesElement = bonuses.addText(api.balance.toString())
-  valueStyle(bonusesElement)
+  addValue(bonuses, api.balance.toString())
 
   // Show Rank and Cashback
-  if (config.widgetFamily !== "small") {
-    
+  if (LARGE || (!SMALL && !singleOrganization)) {
+
     let rankCashLabel = widget.addStack()
     rankCashLabel.setPadding(10, 0, 0, 0)
 
-    let rankTextElement = rankCashLabel.addText("Уровень:")
-    labelStyle(rankTextElement)
+    addLabel(rankCashLabel, "Уровень:")
     rankCashLabel.addSpacer()
 
-    let cashbackLabel = rankCashLabel.addText("Кешбек")
-    labelStyle(cashbackLabel)
+    addLabel(rankCashLabel, "Кешбек")
 
     let rankCashValue = widget.addStack()
-    let rankElement = rankCashValue.addText(api.status)
-    valueStyle(rankElement)
-
+    addValue(rankCashValue, api.status)
     rankCashValue.addSpacer()
 
-    let cashbackValue = rankCashValue.addText(api.bonus.toString() + "%")
-    valueStyle(cashbackValue)
+    addValue(rankCashValue, api.bonus.toString() + "%")
+    setPadding(widget, 15)
   }
+
+  return rootWidget
+}
+
+async function codeWidget(rootWidget) {
+  const large = LARGE
+
+  const fontSize = large ? 50 : 30
+  const widget = centerStack(rootWidget, large)
+
+  widget.layoutVertically()
+  widget.spacing = 10
+
+  addLabel(widget, 'Код для кассира', true)
+
+  const code = centerText(widget, await getCode())
+  code.font = Font.blackSystemFont(fontSize)
+  code.textColor = Color.white()
+  addLabel(widget, (new Date()).toLocaleString(), true)
+
   return rootWidget
 }
 
 async function loginWidget() {
   let widget = new ListWidget()
-  widget.backgroundColor = new Color("ffb61d")
+  widget.backgroundColor = BackgroundColor
 
-  let text = widget.addText("Для начала необходимо авторизоваться")
-  valueStyle(text)
+  addValue(widget, "Для начала необходимо авторизоваться")
   return widget
 }
 
+
 async function sberFoodWallet(index) {
   let data = await loadWallet();
-  let wallet = data[index]["wallet"];
+  let organization
+  if (typeof index === "string") {
+    for (let org of data) {
+      if (org.nearbyOrganization.id === index) organization = org
+    }
+  } else {
+    organization = data[index]
+  }
+  let {nearbyOrganization, wallet} = organization;
   return {
-    name: data[index]["network"]["name"],
-    balance: wallet["balance"] / data[index]["nearbyOrganization"]["currency"]["centsCount"],
-    status: wallet["currentRankName"],
-    logo: wallet["logoImageUrl"],
-    bonus: wallet["bonusPercentage"],
-    id: data[index]["nearbyOrganization"]["id"]
+    name: organization.network.name,
+    balance: wallet.balance / nearbyOrganization.currency.centsCount,
+    status: wallet.currentRankName,
+    logo: wallet.logoImageUrl,
+    bonus: wallet.bonusPercentage,
+    id: nearbyOrganization.id,
   }
 }
 
@@ -281,7 +361,7 @@ async function getCode() {
   req.method = "POST";
   req.headers = getHeaders();
   let res = await req.loadJSON()
-  return res["code"].toString().slice(1)
+  return res["code"].toString().slice(1).insert(3, "  ")
 }
 
 async function activateCode(code) {
@@ -304,7 +384,7 @@ async function activateCode(code) {
 async function inputCode() {
   let a = new Alert();
   a.title = "Код для кассира"
-  a.message = "\n\n" + (await getCode()).insert(3, "  ") + "\n\n\nИли введите код с чека"
+  a.message = `\n\n${await getCode()}\n\n\nИли введите код с чека`
   a.addTextField("0000#0000", "5619#")
   a.addAction("Отправить")
   a.addCancelAction("Закрыть")
@@ -337,8 +417,43 @@ async function inputCode() {
     let order = data["order"]
     let sum = +order["orderFullSum"] / centCount
     statusNotification.body = `Покупка в " ${organization["organization"]["name"]}" на ${sum} ${order["currency"]["shortName"]}`
-    statusNotification.subtitle = `${beforeBonuses} -> ${wallet["balance"]}`
+    statusNotification.subtitle = `${beforeBonuses} -> ${wallet["balance"] / centCount}`
 
-    await statusNotification.schedule()
+    await statusNotification.schedule();
   }
+}
+
+async function startMenu() {
+  let a = new Alert();
+  a.title = "Выберите действие:"
+  a.addAction("Получить код")
+  a.addAction("Получить код организации для виджета")
+  a.addCancelAction("Отмена")
+  let res = await a.presentSheet()
+  console.log(res);
+  if (res === 0) {
+    return await inputCode()
+  }
+  if (res === 1) {
+    return await getOrganizationID()
+  }
+}
+
+async function getOrganizationID() {
+  let a = new Alert();
+  a.title = "Выберите организацию"
+  const data = await loadWallet()
+  const clipboard = []
+  console.log(data)
+  for (let org of data) {
+    const nearby = org.nearbyOrganization;
+    clipboard.push(nearby.id)
+    a.addAction(nearby.name)
+  }
+  console.log(clipboard)
+
+  Pasteboard.copy(clipboard[await a.presentSheet()])
+  a = new Alert();
+  a.title = "ID Организации скопирован!"
+  await a.present()
 }
