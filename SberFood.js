@@ -65,13 +65,9 @@ const USER_ID = "SBERFOOD_WIDGET_USER_ID"
 const BackgroundColor = new Color('ffcc00', 1)
 const singleOrganization = args.widgetParameter !== null;
 
-// const SMALL = config.widgetFamily === "small"
-// const MEDIUM = config.widgetFamily === "medium"
-// const LARGE = config.widgetFamily === "large"
-
-const SMALL = false
-const MEDIUM = true
-const LARGE = false
+const SMALL = config.widgetFamily === "small"
+const MEDIUM = config.widgetFamily === "medium"
+const LARGE = config.widgetFamily === "large"
 
 let loggedIn = true
 
@@ -82,7 +78,6 @@ const widget = await (loggedIn ? Widgets() : loginWidget())
 if (config.runsInWidget) {
   Script.setWidget(widget)
 } else if (loggedIn) {
-  await widget.presentMedium()
   await startMenu()
 }
 
