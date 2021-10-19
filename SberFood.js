@@ -65,9 +65,13 @@ const USER_ID = "SBERFOOD_WIDGET_USER_ID"
 const BackgroundColor = new Color('ffcc00', 1)
 const singleOrganization = args.widgetParameter !== null;
 
-const SMALL = config.widgetFamily === "small"
-const MEDIUM = config.widgetFamily === "medium"
-const LARGE = config.widgetFamily === "large"
+// const SMALL = config.widgetFamily === "small"
+// const MEDIUM = config.widgetFamily === "medium"
+// const LARGE = config.widgetFamily === "large"
+
+const SMALL = false
+const MEDIUM = true
+const LARGE = false
 
 let loggedIn = true
 
@@ -78,6 +82,7 @@ const widget = await (loggedIn ? Widgets() : loginWidget())
 if (config.runsInWidget) {
   Script.setWidget(widget)
 } else if (loggedIn) {
+  await widget.presentMedium()
   await startMenu()
 }
 
@@ -205,7 +210,7 @@ async function createWidget(rootWidget, api) {
   let appIcon = await loadAppIcon(api.logo)
   let title = api.name
   const widget = rootWidget.addStack()
-  if (!SMALL) widget.backgroundColor = new Color("000000", 0.1)
+  if (LARGE || (MEDIUM && singleOrganization)) widget.backgroundColor = new Color("000000", 0.1)
 
   widget.cornerRadius = 15
   setPadding(widget, 10)
@@ -274,10 +279,8 @@ async function createWidget(rootWidget, api) {
 }
 
 async function codeWidget(rootWidget) {
-  const large = LARGE
-
-  const fontSize = large ? 50 : 30
-  const widget = centerStack(rootWidget, large)
+  const fontSize = LARGE ? 50 : SMALL ? 20 : 30
+  const widget = centerStack(rootWidget, LARGE)
 
   widget.layoutVertically()
   widget.spacing = 10
@@ -287,8 +290,8 @@ async function codeWidget(rootWidget) {
   const code = centerText(widget, await getCode())
   code.font = Font.blackSystemFont(fontSize)
   code.textColor = Color.white()
-  addLabel(widget, (new Date()).toLocaleString(), true)
-
+  const dateText = addLabel(widget, (new Date()).toLocaleString(), true)
+  if (SMALL) dateText.font = Font.mediumSystemFont(10)
   return rootWidget
 }
 

@@ -1,53 +1,53 @@
 ### Send SMS to login
-POST {{host}}/auth/sendSms
-AppKey: {{AppKey}}
-AppPlatform: {{AppPlatform}}
-AppVersion: {{AppVersion}}
+POST https://app.sberfood.ru/api/mobile/v3/auth/sendSms
+AppKey: "{{AppKey}}"
+AppPlatform: "{{AppPlatform}}"
+AppVersion: "{{AppVersion}}"
 Content-Type: application/json;charset=UTF-8
 
 {"userPhone":"{{phone}}"}
 
 ### Confirm login
-POST {{host}}/auth/checkSms
-AppKey: {{AppKey}}
-AppPlatform: {{AppPlatform}}
-AppVersion: {{AppVersion}}
+POST https://app.sberfood.ru/api/mobile/v3/auth/checkSms
+AppKey: "{{AppKey}}"
+AppPlatform: "{{AppPlatform}}"
+AppVersion: "{{AppVersion}}"
 Content-Type: application/json;charset=UTF-8
 
 {"userPhone":"{{phone}}","password":"9376"}
 
 ### Getting wallet
-GET {{host}}/user/{{userId}}/wallets
-AppKey: {{AppKey}}
-AppPlatform: {{AppPlatform}}
-AppVersion: {{AppVersion}}
-Token: {{token}}
+GET https://app.sberfood.ru/api/mobile/v3/user/{{userId}}/wallets
+AppKey: "{{AppKey}}"
+AppPlatform: "{{AppPlatform}}"
+AppVersion: "{{AppVersion}}"
+Token: "{{token}}"
 
 t: {{$timestamp}}
 offset: 0
 
 ### Getting wallet by Organization ID
-GET {{host}}/user/{{userId}}/wallet/33869ca5-9a63-e611-80ea-0050560102b9
-AppKey: {{AppKey}}
-AppPlatform: {{AppPlatform}}
-AppVersion: {{AppVersion}}
-Token: {{token}}
+GET https://app.sberfood.ru/api/mobile/v3/user/{{userId}}/wallet/33869ca5-9a63-e611-80ea-0050560102b9
+AppKey: "{{AppKey}}"
+AppPlatform: "{{AppPlatform}}"
+AppVersion: "{{AppVersion}}"
+Token: "{{token}}"
 
 t: {{$timestamp}}
 offset: 0
 
 ### Activate code
-POST {{host}}/order/activate
-AppKey: {{AppKey}}
-AppPlatform: {{AppPlatform}}
-AppVersion: {{AppVersion}}
+POST https://app.sberfood.ru/api/mobile/v3/order/activate
+AppKey: "{{AppKey}}"
+AppPlatform: "{{AppPlatform}}"
+AppVersion: "{{AppVersion}}"
 Content-Type: application/json;charset=UTF-8
 
 {"promoCode":"5619#3713","clientFeatures":["Split"],"userId":"{{userId}}"}
 
 ### Generate Code
 POST https://app.sberfood.ru/api/mobile/v3/user/{{userId}}/generateCode
-AppKey: {{AppKey}}
-AppPlatform: {{AppPlatform}}
-AppVersion: {{AppVersion}}
-Token: {{token}}
+AppKey: "{{AppKey}}"
+AppPlatform: "{{AppPlatform}}"
+AppVersion: "{{AppVersion}}"
+Token: "{{token}}"
