@@ -304,7 +304,7 @@ async function sberFoodWallet(index) {
   let organization
   if (typeof index === "string") {
     for (let org of data) {
-      if (org.nearbyOrganization.id === index) organization = org
+      if (org.network.id === index) organization = org
     }
   } else {
     organization = data[index]
@@ -444,9 +444,9 @@ async function getOrganizationID() {
   const clipboard = []
   console.log(data)
   for (let org of data) {
-    const nearby = org.nearbyOrganization;
-    clipboard.push(nearby.id)
-    a.addAction(nearby.name)
+    const {network} = org;
+    clipboard.push(network.id)
+    a.addAction(network.name)
   }
   console.log(clipboard)
 
