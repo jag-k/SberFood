@@ -4,7 +4,7 @@
 
 
 
-Работает на базе [Scriptable <img src="images/scriptable_icon.png" alt=""/>](https://scriptable.app/)
+Работает на базе [<img src="images/scriptable_icon.png" height="16px" alt=""/> Scriptable](https://scriptable.app/)
 
 ## Функции
 
