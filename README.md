@@ -2,9 +2,7 @@
 
 Удобный способ слежения за балансом бонусов!
 
-
-
-Работает на базе [<img src="images/scriptable_icon.png" height="16px" alt=""/> Scriptable](https://scriptable.app/)
+Работает на базе [<img height="16px" src="images/scriptable_icon.png"/> Scriptable](https://scriptable.app/)
 
 ## Функции
 
