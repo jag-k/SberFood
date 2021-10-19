@@ -2,9 +2,13 @@ const gulp = require('gulp');
 const fs = require("fs");
 const modifyFile = require('gulp-modify-file')
 const rename = require('gulp-rename');
+const pkg = require('./package.json');
 
-const SRC = 'SberFood.js';
-const DEST = process.env.ICLOUD || "~/Library/Mobile Documents/iCloud~dk~simonbs~Scriptable/Documents";
+let _dist = pkg.main.split(/\//)
+const name = _dist.pop()
+const dist = _dist.join('/')
+
+const DIST = process.env.ICLOUD || "~/Library/Mobile Documents/iCloud~dk~simonbs~Scriptable/Documents";
 const CONFIG_FILE = 'config.json';
 
 const getData = () => {
@@ -22,30 +26,31 @@ ${content}`
 
 
 gulp.task('copy', (done) => {
-    gulp.src(SRC)
+    gulp.src(pkg.source)
       .pipe(modifyFile(generateCode))
-      .pipe(gulp.dest(DEST))
-      .pipe(gulp.dest(`build/`));
+      .pipe(rename(name))
+      .pipe(gulp.dest(DIST))
+      .pipe(gulp.dest(dist));
     done();
   }
 )
 
 gulp.task('build', (done) => {
-    gulp.src(SRC)
+    gulp.src(pkg.source)
       .pipe(modifyFile(generateCode))
       .pipe(modifyFile((content) => {
         const data = getData();
         data.script = content
         return JSON.stringify(data, null, 2)
       }))
-      .pipe(rename({extname: '.scriptable'}))
-      .pipe(gulp.dest(`build/`));
+      .pipe(rename(`${name.split('.')[0]}.scriptable`))
+      .pipe(gulp.dest(dist));
     done();
   }
 )
 
 gulp.task('watch', () => {
-  gulp.watch(SRC, gulp.series('copy', 'build'));
+  gulp.watch(pkg.source, gulp.series('copy', 'build'));
 })
 
 gulp.task('default', gulp.series('watch'))

@@ -13,7 +13,8 @@
   "bugs": {
     "url": "https://github.com/jag-k/SberFood/issues"
   },
-  "main": "SberFood.js",
+  "source": "src/index.js",
+  "main": "dist/SberFood.js",
   "homepage": "https://github.com/jag-k/SberFood",
   "license": "SEE LICENSE IN LICENSE",
   "eslintConfig": {
