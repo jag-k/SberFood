@@ -1,6 +1,6 @@
 # <span style="color:#1fa037">Сбер</span><span style="color:#ff244d">Фуд</span> Виджет
 
-Удобный способ отслежения баланса бонусов!
+Удобный способ отслеживания баланса бонусов!
 
 Работает на базе [<img height="16px" src="images/scriptable_icon.png"/> Scriptable](https://scriptable.app/)
 
